@@ -1,0 +1,25 @@
+connectors:
+  'NULL':
+    DBN: ''
+    DRV: ''
+    KEY: BZSmhIkUMJShHfRMRoV9756xSgIW-r8nya8JrK80eqs=
+    PWD: ''
+    SRV: ''
+    TCN: ''
+    UID: ''
+  TEST:
+    DBN: gAAAAABfR6GCUD42irot4ZskCT_oD6UVllonoC-Xt6IoPoaqHA8nBOjsQk9oKRKvnFSRXpMW75RDPg4dXmy3dJwAGWr2CJYVrA==
+    DRV: '{SQL Server}'
+    KEY: ScGKiRCP_79gGZSEuaSNenSFuLTQOcpcHGOgdxE1H08=
+    PWD: gAAAAABfR6GC8dkndb8lz2pEETSe-izFVg00sQhzYEdGMVowl7OVatN-WjydQwoVtpjwc_bJ2PZqZB33Gus9cQp0x5hMQJJsqA==
+    SRV: sql_server
+    TCN: 'Yes'
+    UID: gAAAAABfR6GCD2DikpYgyzs6TeD7uc1fJvEOboIcDVsomCUSiNWJ6920juOIrXCbwWxa1De16lkwKLtroE-Jss5s8dKZfoTjNQ==
+  TESTING:
+    DBN: gAAAAABfR6GChEWLG3vssbpEz0t8PYKAC7S7V6vfOCYge2SPJ9I3NgUaBjumFIg3-6hRdImVHPaPqdAPf1sn5hahKS6yDEWD1Q==
+    DRV: '{SQL Server}'
+    KEY: kpr39DO1brwMjkvq3Bo41FP5hZDsquSGe8MCTKkY9q0=
+    PWD: gAAAAABfR6GC1tsmz2YoHBdEYgdxwXchGql5ZJMrdCYLHz88E6U2-Ws_UBNDa4JRy6ShMXjHsxssbjoUsMGJpPaSe9LuXW0rlg==
+    SRV: sql_server
+    TCN: 'Yes'
+    UID: gAAAAABfR6GCK76cMAN6XRi4ETOtSyZxw1greZ3F8cW45c_B8u_x-NBKQH_VZepi-IgDMucqpkk43SMzz05UdPeFEDGKx_oqTA==
