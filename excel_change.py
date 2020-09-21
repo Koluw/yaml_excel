@@ -40,6 +40,7 @@ def pand_excel():
     dHeader - result of Header. after merge it should be upgraded - if we added new column by merge, it should be
               added also in dHeader.
     :return:
+    switch:   1 if error and shouldn't continue, 0 if everything is fine
     dHeader:  Header of Excel (DataFrame)
     dData:    result set after server's answer (DataFrame)
     is_found: How many rows we have found by criteria. This criteria could be applied to this project only (Int)
@@ -67,9 +68,8 @@ def pand_excel():
     if is_found == 0:
         print('There was no data for work')
         return 1, [], [], COLUMN_POS
-    dHeader1 = df.loc[:HEADER_ROW - is_found]
-    dHeader = dHeader1.dropna(axis=0, how='all', subset=None).copy()
-    print(dHeader.shape)
+    dHeader = df.loc[:HEADER_ROW - is_found].dropna(axis=0, how='all', subset=None).copy()
+    # print(dHeader.shape)
     columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
     columns[COLUMN_POS] = 'Number'  # we need to change this name to use merge without additional parameters
     dHeader.columns = columns
@@ -192,13 +192,6 @@ else:
     print('There were few mistakes during execution.')
 
 """
-excel = win32.gencache.EnsureDispatch('Excel.Application')
-wb = excel.Workbooks.Open(r'file.xlsx')
-ws = wb.Worksheets("Sheet1")
-ws.Columns.AutoFit()
-wb.Save()
-excel.Application.Quit()
-# worksheet.set_default_row(20)
     # for item, cost in expenses:
     #     ws.cell(row, col).value = item
     #     ws.cell(row, col + 1).value = cost
