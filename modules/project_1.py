@@ -21,7 +21,8 @@ def mockup_server(server_string):
     """
     return pd.DataFrame({'Number': [4055, 4032, 4099, 4055],
                          'Abbr': ['VVF', 'TTR', 'SWE', 'DOH'],
-                         'Gear': [50, 0, 30, 50],
+                         # 'Gear': [50, 0, 30, 50],
+			 'LastDate': ['19/09/2020', '17/09/2020', '20/09/2020', '21/09/2020'],
                         })
     pass
 
