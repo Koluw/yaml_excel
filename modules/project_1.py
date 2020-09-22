@@ -1,7 +1,7 @@
 import pandas as pd
 import pyodbc
 import os
-impory sys
+import sys
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font  # colors, Fill,
