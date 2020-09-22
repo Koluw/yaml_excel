@@ -2,6 +2,7 @@ import pandas as pd
 import pyodbc
 import os
 import sys
+# import datetime  # in case we want to fix string to date/datetime
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font  # colors, Fill,
@@ -149,6 +150,7 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
             bold=True,
             color="00800080",
         ),
+		number_format='DD/MM/YYYY',
         border=thin_border,
         alignment=ali,
         fill=PatternFill("solid", fgColor="00FFFF00")
@@ -176,6 +178,11 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     j_todo = dataHeader.shape[1] - 2  # exactly same number of columns that were added in read_source method
     # print(mr, mc)
     # ws.merge_cells(start_row=2, start_column=1, end_row=4, end_column=4)
+	
+	# ##### In case we have some string date we want switch to date - this part will be useful
+	# col = dataRows.columns[-1]
+	# for i in range(HeadRow + 1, mr):
+	# 	ws.cell(i, mc - 1).value = datetime.datetime.strptime(dataRows.loc[i - HeadRow - 1, col], "%d/%m/%Y")
 
     for i in range(1, mr):
         for j in range(1, mc):
@@ -234,10 +241,12 @@ def server_answer(where_clause):
 				
 				SQL_Query = pd.read_sql_query(
 							'''select number, field1,
-							CONVERT(VARCHAR, LastDate, 101) AS LastDate
+							LastDate
 							from v_Some_View where number in ''' +
 							where_clause, con)  # here should be existing table or view from your DB.
-				
+				# CONVERT(VARCHAR, LastDate, 103) AS LastDate
+				# ##### we could use this convert to use string, but it will be needed
+				# ##### to be fixed with commented code.
 				df = pd.DataFrame(SQL_Query, columns=['number', 'field1', 'LastDate'])
 				cur.close()
 				return df
