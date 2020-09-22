@@ -247,6 +247,9 @@ def server_answer(where_clause):
 		except pyodbc.OperationalError:
 			print('Some difficulties were found during connection.')
             return 1
+		except TypeError:
+			print('connection to server couldn\'t be reach with NoneType. Check credentials.')
+			return 1
 	else:
 		print('Incorrect parameters were sent to server ' + KEY)
         return 1
