@@ -20,6 +20,7 @@ def FindConf(config_name, selector_key):
 	"""
 	path_to_config = ''  # os.path.join(os.path.expandvars("%userprofile%"), 'Documents\\')
 	selector_key = selector_key.upper()
+	local_arr = CONN_ARR.copy()
 	try:
 		with open(path_to_config + config_name) as fn:
 			configs = yaml.safe_load(fn)  # , Loader=yaml.FullLoader
@@ -30,12 +31,12 @@ def FindConf(config_name, selector_key):
 					curr_conn = configs[cons]
 					try:
 						f = Fernet(curr_conn['KEY'])
-						for key in CONN_ARR:
+						for key in local_arr:
 							try:
 								if key in ('DBN', 'UID', 'PWD'):
-									CONN_ARR[key] = f.decrypt(str.encode(curr_conn[key])).decode()
+									local_arr[key] = f.decrypt(str.encode(curr_conn[key])).decode()
 								else:
-									CONN_ARR[key] = curr_conn[key]
+									local_arr[key] = curr_conn[key]
 							except KeyError:
 								print('incompatible info inside connector')
 						# ##### If we want to re-create hashes for each key - next few rows shows how
@@ -44,6 +45,7 @@ def FindConf(config_name, selector_key):
 						#     print(key, f.encrypt(str.encode(CONN_ARR[key])))
 					except TypeError:
 						print('incompatible key value for decode/encode')
+					return local_arr
 				# print('this is connection string', CONN_ARR)
 	# ######################### EXCEPTION BLOCK ######################### #
 	except ValueError:
@@ -60,6 +62,7 @@ def FindConf(config_name, selector_key):
 		print('trying to check some Attribute which is absent')
 	except yaml.composer.ComposerError:
 		print('some composer problems')
+	return local_arr
 
 
 def PutEntry(config_name, selector_key):
