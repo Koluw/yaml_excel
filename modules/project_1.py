@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font  # colors, Fill,
 from openpyxl.styles import Border, Side, Alignment, PatternFill
-from modules import auth_module as am
+from .auth_module import *
 
 KEY = 'project_1'
 CONF_NAME = 'config.yaml'
@@ -22,7 +22,7 @@ def mockup_server(server_string):
     return pd.DataFrame({'Number': [4055, 4032, 4099, 4055],
                          'Abbr': ['VVF', 'TTR', 'SWE', 'DOH'],
                          # 'Gear': [50, 0, 30, 50],
-			 'LastDate': ['19/09/2020', '17/09/2020', '20/09/2020', '21/09/2020'],
+             'LastDate': ['19/09/2020', '17/09/2020', '20/09/2020', '21/09/2020'],
                         })
     pass
 
@@ -54,10 +54,10 @@ def read_source(file_name):
     COLUMN_POS = 0  # Position of Number's column
 
     try:
-		xl_file = pd.ExcelFile(file_name)
-	except FileNotFoundError:
-		print('File couldn\'t be open or doesn\'t exist')
-		return 1, [], [], COLUMN_POS
+        xl_file = pd.ExcelFile(file_name)
+    except FileNotFoundError:
+        print('File couldn\'t be open or doesn\'t exist')
+        return 1, [], [], COLUMN_POS
 
     df = xl_file.parse(xl_file.sheet_names[0], header=None)
     df.columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
@@ -100,8 +100,8 @@ def read_source(file_name):
 def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     sheetName = 'T1'
     os.chdir(sys.path[1] + '\\datasets\\')
-	
-	writer = pd.ExcelWriter(file_name, engine='openpyxl')  # , sheet_name=rs[0] xlsxwriter
+
+    writer = pd.ExcelWriter(file_name, engine='openpyxl')  # , sheet_name=rs[0] xlsxwriter
 
     HeadRow = max(dataHeader.shape[0], 3)
     dataHeader.to_excel(writer, sheet_name=sheetName, index=False, header=False, startrow=0, startcol=0)
@@ -151,7 +151,7 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
             bold=True,
             color="00800080",
         ),
-		number_format='DD/MM/YYYY',
+        number_format='DD/MM/YYYY',
         border=thin_border,
         alignment=ali,
         fill=PatternFill("solid", fgColor="00FFFF00")
@@ -179,11 +179,11 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     j_todo = dataHeader.shape[1] - 2  # exactly same number of columns that were added in read_source method
     # print(mr, mc)
     # ws.merge_cells(start_row=2, start_column=1, end_row=4, end_column=4)
-	
-	# ##### In case we have some string date we want switch to date - this part will be useful
-	# col = dataRows.columns[-1]
-	# for i in range(HeadRow + 1, mr):
-	# 	ws.cell(i, mc - 1).value = datetime.datetime.strptime(dataRows.loc[i - HeadRow - 1, col], "%d/%m/%Y")
+
+    # ##### In case we have some string date we want switch to date - this part will be useful
+    # col = dataRows.columns[-1]
+    # for i in range(HeadRow + 1, mr):
+    # 	ws.cell(i, mc - 1).value = datetime.datetime.strptime(dataRows.loc[i - HeadRow - 1, col], "%d/%m/%Y")
 
     for i in range(1, mr):
         for j in range(1, mc):
@@ -199,15 +199,15 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
         # print(length, column_cells[0].column)
         ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
     try:
-		writer.save()
-		writer.close()
-		return 0
-	except PermissionError:
-		print('The document is open already. Can\'t save new version.')
-		return 1
-	except FileNotFoundError:
-		print('There is no directory')
-		return 1
+        writer.save()
+        writer.close()
+        return 0
+    except PermissionError:
+        print('The document is open already. Can\'t save new version.')
+        return 1
+    except FileNotFoundError:
+        print('There is no directory')
+        return 1
 
 
 def as_str(value):
@@ -215,53 +215,53 @@ def as_str(value):
 
 
 def doJob(file_input, file_output):
-	isNext, dHead, dData, numbRow = read_source(file_name=file_input)
-	if isNext == 0:
-		isNext = save_2Excel(file_name=file_output, dataHeader=dHead, dataRows=dData, numberColumn=numbRow)
-		if isNext == 0:
-			print('Success')
-			# print(server_answer('(40273)'))
-		else:
-			print('There were few mistakes')
-	else:
-		print('There was a mistake during execution')
+    isNext, dHead, dData, numbRow = read_source(file_name=file_input)
+    if isNext == 0:
+        isNext = save_2Excel(file_name=file_output, dataHeader=dHead, dataRows=dData, numberColumn=numbRow)
+        if isNext == 0:
+            print('Success')
+            # print(server_answer('(40273)'))
+        else:
+            print('There were few mistakes')
+    else:
+        print('There was a mistake during execution')
 
 
 def server_answer(where_clause):
-	conn_str = am.FindConf(CONF_NAME, KEY)
-	if where_clause.startswith('(') and len(where_clause) > 6:  # min length = (40XX) = 6
-		try:
-			con = pyodbc.connect(Trusted_Connection=conn_str['TCN'],
-								 driver=conn_str['DRV'],
-								 server=conn_str['SRV'],
-								 database=conn_str['DBN'],
-								 uid=conn_str['UID'],
-								 pwd=conn_str['PWD'])
-			with con:
-				cur = con.cursor()
-				
-				SQL_Query = pd.read_sql_query(
-							'''select number, field1,
-							LastDate
-							from v_Some_View where number in ''' +
-							where_clause, con)  # here should be existing table or view from your DB.
-				# CONVERT(VARCHAR, LastDate, 103) AS LastDate
-				# ##### we could use this convert to use string, but it will be needed
-				# ##### to be fixed with commented code.
-				df = pd.DataFrame(SQL_Query, columns=['number', 'field1', 'LastDate'])
-				cur.close()
-				return df
-		except pyodbc.InterfaceError:
-			print('connection string wasn\'t successful.')
+    conn_str = FindConf(CONF_NAME, KEY)
+    if where_clause.startswith('(') and len(where_clause) > 6:  # min length = (40XX) = 6
+        try:
+            con = pyodbc.connect(Trusted_Connection=conn_str['TCN'],
+                                 driver=conn_str['DRV'],
+                                 server=conn_str['SRV'],
+                                 database=conn_str['DBN'],
+                                 uid=conn_str['UID'],
+                                 pwd=conn_str['PWD'])
+            with con:
+                cur = con.cursor()
+
+                SQL_Query = pd.read_sql_query(
+                            '''select number, field1,
+                            LastDate
+                            from v_Some_View where number in ''' +
+                            where_clause, con)  # here should be existing table or view from your DB.
+                # CONVERT(VARCHAR, LastDate, 103) AS LastDate
+                # ##### we could use this convert to use string, but it will be needed
+                # ##### to be fixed with commented code.
+                df = pd.DataFrame(SQL_Query, columns=['number', 'field1', 'LastDate'])
+                cur.close()
+                return df
+        except pyodbc.InterfaceError:
+            print('connection string wasn\'t successful.')
             return 1
-		except pyodbc.OperationalError:
-			print('Some difficulties were found during connection.')
+        except pyodbc.OperationalError:
+            print('Some difficulties were found during connection.')
             return 1
-		except TypeError:
-			print('connection to server couldn\'t be reach with NoneType. Check credentials.')
-			return 1
-	else:
-		print('Incorrect parameters were sent to server ' + KEY)
+        except TypeError:
+            print('connection to server couldn\'t be reach with NoneType. Check credentials.')
+            return 1
+    else:
+        print('Incorrect parameters were sent to server ' + KEY)
         return 1
 """
     # for item, cost in expenses:

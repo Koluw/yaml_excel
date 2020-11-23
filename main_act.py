@@ -1,5 +1,5 @@
 # from modules import auth_module as am  # if you want to check only this module
-from modules import pais as ps
+from .modules import project_1 as ps
 
 file_name0 = 'b999.xlsx'
 
