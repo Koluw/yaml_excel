@@ -1,4 +1,12 @@
 connectors:
+  EMAIL:
+    DBN: imap.outlook.com
+    DRV: '{SMTP Server}'
+    KEY: aFCaW21yUkK73yR93Tka0mi-VD-mmJ3HTf3XQUIosQY=
+    PWD: gAAAAABfvjV1c0bQBkjoelH9YWjVuNOay3WEKC_ExJYzYjQRdyl9Fx6Pw4wXr2Ei-sp7zHHyM6BTA4s2acKGu8ZMCUh9yQG2hg==
+    SRV: gAAAAABfvjV1K1PwqGkmfFWKjglwZyYM7dMWkdMNfxckG1C3lD35VAMnKF2Vv4uvz7XbiOB0mGRGIcSP4KTncoD6CznXd36z4lZyJy-lUk8D3LEIWmfjlhA=
+    TCN: 'No'
+    UID: gAAAAABfvjV1C2F9qqQqPR2G0FY9Ro_XL5y7850RkICaTNK5T_bj9o6qpl9h7dF982QHR9NC8LtPM2RkuZ2CnmtkRmkJNf0z6A==
   'NULL':
     DBN: ''
     DRV: ''

@@ -7,10 +7,11 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import NamedStyle, Font  # colors, Fill,
 from openpyxl.styles import Border, Side, Alignment, PatternFill
-from .auth_module import *
+# from .auth_module import *
+from modules import auth_module as am
 
 KEY = 'project_1'
-CONF_NAME = 'config.yaml'
+CONF_NAME = 'data.yaml'
 
 
 def mockup_server(server_string):
@@ -24,7 +25,6 @@ def mockup_server(server_string):
                          # 'Gear': [50, 0, 30, 50],
              'LastDate': ['19/09/2020', '17/09/2020', '20/09/2020', '21/09/2020'],
                         })
-    pass
 
 
 def merge_sources(l_src, r_src):
@@ -44,7 +44,7 @@ def read_source(file_name):
     dHeader - result of Header. after merge it should be upgraded - if we added new column by merge, it should be
               added also in dHeader.
     :return:
-    switch:   1 if error and shouldn't continue, 0 if everything is fine
+    answer_def:   0 if error and shouldn't continue, 1 if everything is fine
     dHeader:  Header of Excel (DataFrame)
     dData:    result set after server's answer (DataFrame)
     is_found: How many rows we have found by criteria. This criteria could be applied to this project only (Int)
@@ -52,54 +52,60 @@ def read_source(file_name):
     os.chdir(sys.path[1] + '\\datasets\\')
     HEADER_ROW = 0  # Position of Header ending
     COLUMN_POS = 0  # Position of Number's column
-
+    answer_def = 0
     try:
-        xl_file = pd.ExcelFile(file_name)
-    except FileNotFoundError:
-        print('File couldn\'t be open or doesn\'t exist')
-        return 1, [], [], COLUMN_POS
+        try:
+            xl_file = pd.ExcelFile(file_name)
+        except FileNotFoundError:
+            print('File couldn\'t be open or doesn\'t exist')
+            raise ValueError
+            # return 0, [], [], COLUMN_POS
 
-    df = xl_file.parse(xl_file.sheet_names[0], header=None)
-    df.columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
+        df = xl_file.parse(xl_file.sheet_names[0], header=None)
+        df.columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
 
-    is_found = 0
+        is_found = 0
 
-    for i in range(df.shape[0]):
-        j_pos = 0
-        for j in df.columns:
-            j_pos += 1
-            cur_cell = str(df.loc[i, j])
-            if (len(cur_cell) in (4, 6)) & (cur_cell.startswith('40')):
-                HEADER_ROW = i
-                is_found += 1
-                COLUMN_POS = j_pos - 1
-    # check if we have found some useful results
-    if is_found == 0:
-        print('There was no data for work')
-        return 1, [], [], COLUMN_POS
-    dHeader = df.loc[:HEADER_ROW - is_found].dropna(axis=0, how='all', subset=None).copy()
-    # print(dHeader.shape)
-    columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
-    columns[COLUMN_POS] = 'Number'  # we need to change this name to use merge without additional parameters
-    dHeader.columns = columns
-    dData = df.loc[HEADER_ROW - is_found + 1:]
-    dData.columns = columns
-    number_list = '(' + str(dData['Number'].tolist()).strip('[]') + ')'
-    # this string will be sent to server and from there we should get some result set.
+        for i in range(df.shape[0]):
+            j_pos = 0
+            for j in df.columns:
+                j_pos += 1
+                cur_cell = str(df.loc[i, j])
+                if (len(cur_cell) in (4, 6)) & (cur_cell.startswith('40')):
+                    HEADER_ROW = i
+                    is_found += 1
+                    COLUMN_POS = j_pos - 1
+        # check if we have found some useful results
+        if is_found == 0:
+            print('There was no data for work')
+            raise ValueError
+        dHeader = df.loc[:HEADER_ROW - is_found].dropna(axis=0, how='all', subset=None).copy()
+        # print(dHeader.shape)
+        columns = ['col' + str(_ + 1) for _ in range(df.shape[1])]
+        columns[COLUMN_POS] = 'Number'  # we need to change this name to use merge without additional parameters
+        dHeader.columns = columns
+        dData = df.loc[HEADER_ROW - is_found + 1:]
+        dData.columns = columns
+        number_list = '(' + str(dData['Number'].tolist()).strip('[]') + ')'
+        # this string will be sent to server and from there we should get some result set.
 
-    m_4 = server_answer(number_list)  # mockup for answer from server
-    if m_4 == []:
-        m_4 = mockup_server(number_list)
-    dData = merge_sources(dData, m_4)  # refill dData with full results.
-    dHeader['point1'] = 'SomeDate'
-    dHeader['point2'] = 'Value'
-
-    return 0, dHeader, dData, COLUMN_POS
+        m_4 = server_answer(number_list)  # mockup for answer from server
+        if not m_4:
+            m_4 = mockup_server(number_list)
+        dData = merge_sources(dData, m_4)  # refill dData with full results.
+        dHeader['point1'] = 'SomeDate'
+        dHeader['point2'] = 'Value'
+        answer_def = 1
+    except ValueError:
+        dHeader = dData = []
+    return answer_def, dHeader, dData, COLUMN_POS
 
 
 def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     sheetName = 'T1'
     os.chdir(sys.path[1] + '\\datasets\\')
+    answer_def = 0
+    answer_string = ''
 
     writer = pd.ExcelWriter(file_name, engine='openpyxl')  # , sheet_name=rs[0] xlsxwriter
 
@@ -108,10 +114,11 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     dataRows.to_excel(writer, sheet_name=sheetName, index=False, header=False, startrow=HeadRow, startcol=0)
 
     ws = writer.book[sheetName]
-    # After we wrote to file some data, we already able to use sheetName, but it SHOULD be referred as direct link to sheet
+    # After we wrote to file some data, we already able to use sheetName,
+    # but it SHOULD be referred as direct link to sheet
 
     ws.sheet_view.rightToLeft = True
-    # In my project it is necessarity to use RightToLeft direction on Sheets
+    # In my project it is necessarily to use RightToLeft direction on Sheets
 
     # ##### Styles part  started ##### #
     # ##### If you need some styles, here you could put your own ##### #
@@ -201,13 +208,13 @@ def save_2Excel(file_name, dataHeader, dataRows, numberColumn):
     try:
         writer.save()
         writer.close()
-        return 0
+        answer_def = 1
     except PermissionError:
-        print('The document is open already. Can\'t save new version.')
-        return 1
+        answer_string = 'The document is open already. Can\'t save new version.'
     except FileNotFoundError:
-        print('There is no directory')
-        return 1
+        answer_string = 'There is no directory'
+    print(answer_string) if answer_string else None
+    return answer_def
 
 
 def as_str(value):
@@ -216,53 +223,60 @@ def as_str(value):
 
 def doJob(file_input, file_output):
     isNext, dHead, dData, numbRow = read_source(file_name=file_input)
-    if isNext == 0:
+    if isNext == 1:
         isNext = save_2Excel(file_name=file_output, dataHeader=dHead, dataRows=dData, numberColumn=numbRow)
-        if isNext == 0:
-            print('Success')
+        if isNext == 1:
+            answer_string = 'Success'
             # print(server_answer('(40273)'))
         else:
-            print('There were few mistakes')
+            answer_string = 'There were few mistakes'
     else:
-        print('There was a mistake during execution')
+        answer_string = 'There was a mistake during execution'
+    print(answer_string)
 
 
 def server_answer(where_clause):
-    conn_str = FindConf(CONF_NAME, KEY)
-    if where_clause.startswith('(') and len(where_clause) > 6:  # min length = (40XX) = 6
-        try:
-            con = pyodbc.connect(Trusted_Connection=conn_str['TCN'],
-                                 driver=conn_str['DRV'],
-                                 server=conn_str['SRV'],
-                                 database=conn_str['DBN'],
-                                 uid=conn_str['UID'],
-                                 pwd=conn_str['PWD'])
-            with con:
-                cur = con.cursor()
+    res, conn_str = am.find_config(KEY)
+    df = []
+    answer_def = 0
+    answer_string = ''
+    if res == 1:
+        if where_clause.startswith('(') and len(where_clause) > 6:  # min length = (40XX) = 6
+            try:
+                con = pyodbc.connect(Trusted_Connection=conn_str['TCN'],
+                                     driver=conn_str['DRV'],
+                                     server=conn_str['SRV'],
+                                     database=conn_str['DBN'],
+                                     uid=conn_str['UID'],
+                                     pwd=conn_str['PWD'])
+                with con:
+                    cur = con.cursor()
 
-                SQL_Query = pd.read_sql_query(
-                            '''select number, field1,
-                            LastDate
-                            from v_Some_View where number in ''' +
-                            where_clause, con)  # here should be existing table or view from your DB.
-                # CONVERT(VARCHAR, LastDate, 103) AS LastDate
-                # ##### we could use this convert to use string, but it will be needed
-                # ##### to be fixed with commented code.
-                df = pd.DataFrame(SQL_Query, columns=['number', 'field1', 'LastDate'])
-                cur.close()
-                return df
-        except pyodbc.InterfaceError:
-            print('connection string wasn\'t successful.')
-            return 1
-        except pyodbc.OperationalError:
-            print('Some difficulties were found during connection.')
-            return 1
-        except TypeError:
-            print('connection to server couldn\'t be reach with NoneType. Check credentials.')
-            return 1
+                    SQL_Query = pd.read_sql_query(
+                                '''select number, field1,
+                                LastDate
+                                from v_Some_View where number in ''' +
+                                where_clause, con)  # here should be existing table or view from your DB.
+                    # CONVERT(VARCHAR, LastDate, 103) AS LastDate
+                    # ##### we could use this convert to use string, but it will be needed
+                    # ##### to be fixed with commented code.
+                    df = pd.DataFrame(SQL_Query, columns=['number', 'field1', 'LastDate'])
+                    cur.close()
+                    answer_def = 1
+            except pyodbc.InterfaceError:
+                answer_string = 'connection string wasn\'t successful.'
+            except pyodbc.OperationalError:
+                answer_string = 'Some difficulties were found during connection.'
+            except TypeError:
+                answer_string = 'connection to server couldn\'t be reach with NoneType. Check credentials.'
+        else:
+            answer_string = 'Incorrect parameters were sent to server ' + KEY
     else:
-        print('Incorrect parameters were sent to server ' + KEY)
-        return 1
+        answer_string = 'connection was not successful'
+    print(answer_string) if answer_string else None
+    return answer_def, df
+
+
 """
     # for item, cost in expenses:
     #     ws.cell(row, col).value = item
